@@ -125,6 +125,62 @@
             font-weight: bold;
         }
 
+        /* Music Section Styles */
+        .instrument-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .instrument-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .instrument-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .instrument-btn:active {
+            transform: translateY(0);
+        }
+
+        .instrument-btn.playing {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            animation: pulse 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .music-player {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .current-instrument {
+            font-size: 1.5rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
         /* Hero Section */
         .hero {
             padding: 120px 0 80px;
@@ -276,6 +332,19 @@
                     </li>
                     <li><a href="#solutions">Solutions</a></li>
                     <li><a href="#games">Games</a></li>
+                    <li>
+                        <a href="#music">Music ▼</a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#music" data-instrument="piano">Piano</a></li>
+                            <li><a href="#music" data-instrument="guitar">Guitar</a></li>
+                            <li><a href="#music" data-instrument="drums">Drums</a></li>
+                            <li><a href="#music" data-instrument="violin">Violin</a></li>
+                            <li><a href="#music" data-instrument="flute">Flute</a></li>
+                            <li><a href="#music" data-instrument="trumpet">Trumpet</a></li>
+                            <li><a href="#music" data-instrument="saxophone">Saxophone</a></li>
+                            <li><a href="#music" data-instrument="cello">Cello</a></li>
+                        </ul>
+                    </li>
                     <li><a href="#help">Help</a></li>
                 </ul>
             </div>
@@ -388,6 +457,27 @@
         </div>
     </section>
 
+    <!-- Music Section -->
+    <section id="music" class="content-section">
+        <div class="container">
+            <h2 class="section-title">Music</h2>
+            <div class="music-player">
+                <div class="current-instrument" id="currentInstrument">Select an instrument to play</div>
+                <div class="instrument-selector">
+                    <button class="instrument-btn" data-instrument="piano">🎹 Piano</button>
+                    <button class="instrument-btn" data-instrument="guitar">🎸 Guitar</button>
+                    <button class="instrument-btn" data-instrument="drums">🥁 Drums</button>
+                    <button class="instrument-btn" data-instrument="violin">🎻 Violin</button>
+                    <button class="instrument-btn" data-instrument="flute">🎵 Flute</button>
+                    <button class="instrument-btn" data-instrument="trumpet">🎺 Trumpet</button>
+                    <button class="instrument-btn" data-instrument="saxophone">🎷 Saxophone</button>
+                    <button class="instrument-btn" data-instrument="cello">🎻 Cello</button>
+                </div>
+                <p style="margin-top: 2rem; color: #666;">Click on any instrument button to hear its sound. You can also select instruments from the Music menu above.</p>
+            </div>
+        </div>
+    </section>
+
     <!-- Help Section -->
     <section id="help" class="content-section">
         <div class="container">
@@ -449,6 +539,199 @@
                 link.classList.remove('active');
                 if (link.getAttribute('href') === `#${current}`) {
                     link.classList.add('active');
+                }
+            });
+        });
+
+        // Music Instrument Sound Generator
+        class MusicPlayer {
+            constructor() {
+                this.audioContext = null;
+                this.currentInstrument = null;
+                this.initAudioContext();
+            }
+
+            initAudioContext() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.error('Web Audio API not supported');
+                }
+            }
+
+            getInstrumentSound(instrument, frequency = 440) {
+                if (!this.audioContext) {
+                    this.initAudioContext();
+                }
+
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+                const filterNode = this.audioContext.createBiquadFilter();
+
+                oscillator.connect(filterNode);
+                filterNode.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+
+                // Set base frequency
+                oscillator.frequency.value = frequency;
+
+                // Configure based on instrument type
+                switch (instrument) {
+                    case 'piano':
+                        oscillator.type = 'sine';
+                        filterNode.type = 'lowpass';
+                        filterNode.frequency.value = 2000;
+                        break;
+                    case 'guitar':
+                        oscillator.type = 'sawtooth';
+                        filterNode.type = 'bandpass';
+                        filterNode.frequency.value = 800;
+                        filterNode.Q.value = 5;
+                        break;
+                    case 'drums':
+                        oscillator.type = 'sawtooth';
+                        oscillator.frequency.value = 60;
+                        filterNode.type = 'lowpass';
+                        filterNode.frequency.value = 500;
+                        break;
+                    case 'violin':
+                        oscillator.type = 'sine';
+                        filterNode.type = 'bandpass';
+                        filterNode.frequency.value = 1500;
+                        filterNode.Q.value = 3;
+                        break;
+                    case 'flute':
+                        oscillator.type = 'sine';
+                        filterNode.type = 'lowpass';
+                        filterNode.frequency.value = 3000;
+                        break;
+                    case 'trumpet':
+                        oscillator.type = 'sawtooth';
+                        filterNode.type = 'bandpass';
+                        filterNode.frequency.value = 1200;
+                        filterNode.Q.value = 4;
+                        break;
+                    case 'saxophone':
+                        oscillator.type = 'sawtooth';
+                        filterNode.type = 'bandpass';
+                        filterNode.frequency.value = 1000;
+                        filterNode.Q.value = 3;
+                        break;
+                    case 'cello':
+                        oscillator.type = 'sine';
+                        oscillator.frequency.value = frequency * 0.5;
+                        filterNode.type = 'lowpass';
+                        filterNode.frequency.value = 1500;
+                        break;
+                    default:
+                        oscillator.type = 'sine';
+                }
+
+                // Envelope for natural sound
+                const now = this.audioContext.currentTime;
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(0.3, now + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+                oscillator.start(now);
+                oscillator.stop(now + 0.5);
+
+                return oscillator;
+            }
+
+            playInstrument(instrument) {
+                // Play a chord or sequence for better sound
+                const notes = this.getNotesForInstrument(instrument);
+                notes.forEach((note, index) => {
+                    setTimeout(() => {
+                        this.getInstrumentSound(instrument, note);
+                    }, index * 100);
+                });
+            }
+
+            getNotesForInstrument(instrument) {
+                // Return different note frequencies based on instrument
+                const baseFreq = 440; // A4 note
+                switch (instrument) {
+                    case 'piano':
+                        return [baseFreq, baseFreq * 1.25, baseFreq * 1.5];
+                    case 'guitar':
+                        return [baseFreq * 0.75, baseFreq, baseFreq * 1.25];
+                    case 'drums':
+                        return [60, 80, 100];
+                    case 'violin':
+                        return [baseFreq, baseFreq * 1.5];
+                    case 'flute':
+                        return [baseFreq * 1.5, baseFreq * 2];
+                    case 'trumpet':
+                        return [baseFreq * 0.75, baseFreq, baseFreq * 1.25];
+                    case 'saxophone':
+                        return [baseFreq * 0.67, baseFreq, baseFreq * 1.33];
+                    case 'cello':
+                        return [baseFreq * 0.5, baseFreq * 0.75];
+                    default:
+                        return [baseFreq];
+                }
+            }
+        }
+
+        // Initialize music player
+        const musicPlayer = new MusicPlayer();
+        const currentInstrumentDisplay = document.getElementById('currentInstrument');
+
+        // Instrument names mapping
+        const instrumentNames = {
+            piano: '🎹 Piano',
+            guitar: '🎸 Guitar',
+            drums: '🥁 Drums',
+            violin: '🎻 Violin',
+            flute: '🎵 Flute',
+            trumpet: '🎺 Trumpet',
+            saxophone: '🎷 Saxophone',
+            cello: '🎻 Cello'
+        };
+
+        // Function to play instrument sound
+        function playInstrumentSound(instrument) {
+            if (musicPlayer.audioContext && musicPlayer.audioContext.state === 'suspended') {
+                musicPlayer.audioContext.resume();
+            }
+            
+            musicPlayer.playInstrument(instrument);
+            currentInstrumentDisplay.textContent = `Playing: ${instrumentNames[instrument]}`;
+            
+            // Update button state
+            document.querySelectorAll('.instrument-btn').forEach(btn => {
+                btn.classList.remove('playing');
+                if (btn.dataset.instrument === instrument) {
+                    btn.classList.add('playing');
+                    setTimeout(() => btn.classList.remove('playing'), 500);
+                }
+            });
+        }
+
+        // Add event listeners to instrument buttons
+        document.querySelectorAll('.instrument-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const instrument = this.dataset.instrument;
+                playInstrumentSound(instrument);
+            });
+        });
+
+        // Add event listeners to dropdown menu items
+        document.querySelectorAll('.dropdown-menu a[data-instrument]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const instrument = this.dataset.instrument;
+                playInstrumentSound(instrument);
+                
+                // Scroll to music section
+                const musicSection = document.getElementById('music');
+                if (musicSection) {
+                    musicSection.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
                 }
             });
         });
